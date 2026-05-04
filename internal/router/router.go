@@ -1,6 +1,9 @@
 package router
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/nyanko/inform-backend/internal/handlers"
 	"github.com/nyanko/inform-backend/internal/middleware"
@@ -31,6 +34,18 @@ func Setup(
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
+	})
+
+	r.GET("/myip", func(c *gin.Context) {
+		resp, err := http.Get("https://api.ipify.org?format=json")
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		defer resp.Body.Close()
+		var result map[string]interface{}
+		json.NewDecoder(resp.Body).Decode(&result)
+		c.JSON(200, result)
 	})
 
 	v1 := r.Group("/api/v1")
