@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-const rakutenSearchURL = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706"
+const yahooSearchURL = "https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch"
 
 type RakutenItem struct {
 	ItemCode      string  `json:"item_code"`
@@ -29,77 +29,80 @@ type RakutenSearchResult struct {
 }
 
 type RakutenService struct {
-	applicationID string
-	client        *http.Client
+	appID  string
+	client *http.Client
 }
 
-func NewRakutenService(applicationID string) *RakutenService {
+func NewRakutenService(appID string) *RakutenService {
 	return &RakutenService{
-		applicationID: applicationID,
-		client:        &http.Client{},
+		appID:  appID,
+		client: &http.Client{},
 	}
 }
 
 func (s *RakutenService) Search(keyword string, page, hits int) (*RakutenSearchResult, error) {
-	if s.applicationID == "" {
+	if s.appID == "" {
 		return s.mockResult(keyword, page, hits), nil
 	}
 
 	params := url.Values{}
-	params.Set("applicationId", s.applicationID)
-	params.Set("keyword", keyword)
+	params.Set("appid", s.appID)
+	params.Set("query", keyword)
+	params.Set("results", strconv.Itoa(hits))
 	params.Set("page", strconv.Itoa(page))
-	params.Set("hits", strconv.Itoa(hits))
-	params.Set("format", "json")
-	params.Set("formatVersion", "2")
+	params.Set("sort", "-score")
 
-	reqURL := rakutenSearchURL + "?" + params.Encode()
-	log.Printf("[rakuten] GET %s", reqURL)
+	reqURL := yahooSearchURL + "?" + params.Encode()
+	log.Printf("[yahoo] GET %s", reqURL)
 
 	resp, err := s.client.Get(reqURL)
 	if err != nil {
-		return nil, fmt.Errorf("rakuten search: %w", err)
+		return nil, fmt.Errorf("yahoo search: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Printf("[rakuten] error status %d: %s — falling back to mock", resp.StatusCode, string(body))
+		log.Printf("[yahoo] error status %d: %s — falling back to mock", resp.StatusCode, string(body))
 		return s.mockResult(keyword, page, hits), nil
 	}
 
 	var raw struct {
-		Count int `json:"count"`
-		Page  int `json:"page"`
-		PageCount int `json:"pageCount"`
-		Items []struct {
-			ItemName     string `json:"itemName"`
-			ItemCode     string `json:"itemCode"`
-			GenreName    string `json:"genreName"`
-			MediumImageUrls []struct {
-				ImageUrl string `json:"imageUrl"`
-			} `json:"mediumImageUrls"`
-		} `json:"Items"`
+		TotalResultsAvailable int `json:"totalResultsAvailable"`
+		TotalResultsReturned  int `json:"totalResultsReturned"`
+		FirstResultsPosition  int `json:"firstResultsPosition"`
+		Hits                  []struct {
+			Name  string `json:"name"`
+			Code  string `json:"code"`
+			Image struct {
+				Medium string `json:"medium"`
+			} `json:"image"`
+			GenreCategory struct {
+				Name string `json:"name"`
+			} `json:"genreCategory"`
+		} `json:"hits"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		return nil, fmt.Errorf("decode rakuten: %w", err)
+		return nil, fmt.Errorf("decode yahoo: %w", err)
+	}
+
+	pageCount := 1
+	if hits > 0 {
+		pageCount = (raw.TotalResultsAvailable + hits - 1) / hits
 	}
 
 	result := &RakutenSearchResult{
-		TotalCount: raw.Count,
-		Page:       raw.Page,
-		PageCount:  raw.PageCount,
+		TotalCount: raw.TotalResultsAvailable,
+		Page:       page,
+		PageCount:  pageCount,
 	}
-	for _, it := range raw.Items {
-		item := &RakutenItem{
-			ItemCode: it.ItemCode,
-			Name:     it.ItemName,
-			Genre:    it.GenreName,
-		}
-		if len(it.MediumImageUrls) > 0 {
-			item.ImageURL = it.MediumImageUrls[0].ImageUrl
-		}
-		result.Items = append(result.Items, item)
+	for _, it := range raw.Hits {
+		result.Items = append(result.Items, &RakutenItem{
+			ItemCode: it.Code,
+			Name:     it.Name,
+			Genre:    it.GenreCategory.Name,
+			ImageURL: it.Image.Medium,
+		})
 	}
 	return result, nil
 }
