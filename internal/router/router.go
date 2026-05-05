@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -46,6 +47,22 @@ func Setup(
 		var result map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&result)
 		c.JSON(200, result)
+	})
+
+	r.GET("/api/v1/image-proxy", func(c *gin.Context) {
+		imgURL := c.Query("url")
+		if imgURL == "" {
+			c.Status(400)
+			return
+		}
+		resp, err := http.Get(imgURL)
+		if err != nil || resp.StatusCode != 200 {
+			c.Status(404)
+			return
+		}
+		defer resp.Body.Close()
+		c.Header("Cache-Control", "public, max-age=86400")
+		c.DataFromReader(resp.StatusCode, resp.ContentLength, resp.Header.Get("Content-Type"), resp.Body, nil)
 	})
 
 	v1 := r.Group("/api/v1")
