@@ -24,7 +24,7 @@ func (h *ItemsHandler) Search(c *gin.Context) {
 	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	hits, _ := strconv.Atoi(c.DefaultQuery("hits", "10"))
-	if hits != 10 && hits != 20 && hits != 30 {
+	if hits <= 0 || hits > 100 {
 		hits = 10
 	}
 
