@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 )
 
@@ -97,14 +98,40 @@ func (s *RakutenService) Search(keyword string, page, hits int) (*RakutenSearchR
 		PageCount:  pageCount,
 	}
 	for _, it := range raw.Hits {
+		vol, unit := extractVolume(it.Name)
 		result.Items = append(result.Items, &RakutenItem{
-			ItemCode: it.Code,
-			Name:     it.Name,
-			Genre:    it.GenreCategory.Name,
-			ImageURL: it.Image.Medium,
+			ItemCode:      it.Code,
+			Name:          it.Name,
+			Genre:         it.GenreCategory.Name,
+			ImageURL:      it.Image.Medium,
+			ContentVolume: vol,
+			ContentUnit:   unit,
 		})
 	}
 	return result, nil
+}
+
+var volumeRe = regexp.MustCompile(`(\d+(?:\.\d+)?)\s*(ml|mL|ｍｌ|ℓ|L|l|g|ｇ|kg|ｋｇ|枚|ロール|個|本|袋|包|sheets)`)
+
+func extractVolume(name string) (float64, string) {
+	unitMap := map[string]string{
+		"ml": "ml", "mL": "ml", "ｍｌ": "ml",
+		"ℓ": "L", "L": "L", "l": "L",
+		"g": "g", "ｇ": "g",
+		"kg": "kg", "ｋｇ": "kg",
+		"枚": "枚", "ロール": "ロール", "個": "個",
+		"本": "本", "袋": "袋", "包": "包", "sheets": "枚",
+	}
+	m := volumeRe.FindStringSubmatch(name)
+	if m == nil {
+		return 0, ""
+	}
+	vol, _ := strconv.ParseFloat(m[1], 64)
+	unit := unitMap[m[2]]
+	if unit == "" {
+		unit = m[2]
+	}
+	return vol, unit
 }
 
 func (s *RakutenService) SearchByJAN(janCode string) (*RakutenSearchResult, error) {
