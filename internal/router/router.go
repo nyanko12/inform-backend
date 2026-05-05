@@ -80,6 +80,7 @@ func Setup(
 		protected.POST("/products", productsHandler.Create)
 		protected.POST("/products/calculate-days", productsHandler.CalculateDays)
 		protected.DELETE("/products/:id", productsHandler.Delete)
+		protected.PATCH("/products/:id/days", productsHandler.UpdateDays)
 		protected.POST("/products/:id/purchase", productsHandler.Purchase)
 
 		protected.GET("/calendar", calendarHandler.GetMonth)

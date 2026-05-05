@@ -70,6 +70,17 @@ func (r *ProductRepository) ListByUser(userID, keyword string, notificationDaysB
 	return products, nil
 }
 
+func (r *ProductRepository) UpdateDaysToConsume(productID, userID string, days int) error {
+	today := time.Now().Truncate(24 * time.Hour)
+	newDueDate := today.AddDate(0, 0, days)
+	_, err := r.db.Exec(
+		`UPDATE products SET days_to_consume = $1, next_due_date = $2, updated_at = NOW()
+		 WHERE id = $3 AND user_id = $4 AND is_deleted = FALSE`,
+		days, newDueDate, productID, userID,
+	)
+	return err
+}
+
 func (r *ProductRepository) Create(userID string, req *models.Product) (*models.Product, error) {
 	today := time.Now().Truncate(24 * time.Hour)
 	nextDueDate := today.AddDate(0, 0, req.DaysToConsume)

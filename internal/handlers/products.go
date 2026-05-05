@@ -110,6 +110,23 @@ func (h *ProductsHandler) Purchase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"new_due_date": newDueDate.Format("2006-01-02")})
 }
 
+func (h *ProductsHandler) UpdateDays(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	productID := c.Param("id")
+	var req struct {
+		DaysToConsume int `json:"days_to_consume" binding:"required,min=1"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.productRepo.UpdateDaysToConsume(productID, userID, req.DaysToConsume); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 func (h *ProductsHandler) CalculateDays(c *gin.Context) {
 	var req struct {
 		Genre         string  `json:"genre" binding:"required"`
