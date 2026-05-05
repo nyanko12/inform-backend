@@ -33,6 +33,7 @@ type ProductWithStatus struct {
 type CalendarItem struct {
 	ProductID string  `json:"product_id"`
 	Name      string  `json:"name"`
+	Genre     *string `json:"genre,omitempty"`
 	ImageURL  *string `json:"image_url,omitempty"`
 	Status    string  `json:"status"`
 }

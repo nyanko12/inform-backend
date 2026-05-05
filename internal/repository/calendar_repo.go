@@ -21,7 +21,7 @@ func (r *CalendarRepository) GetMonthData(userID string, year, month, notificati
 	end := start.AddDate(0, 1, 0)
 
 	rows, err := r.db.Query(
-		`SELECT id, name, image_url, next_due_date
+		`SELECT id, name, genre, image_url, next_due_date
 		 FROM products
 		 WHERE user_id = $1 AND is_deleted = FALSE
 		   AND next_due_date >= $2 AND next_due_date < $3
@@ -38,10 +38,13 @@ func (r *CalendarRepository) GetMonthData(userID string, year, month, notificati
 
 	for rows.Next() {
 		var item models.CalendarItem
-		var imageURL sql.NullString
+		var genre, imageURL sql.NullString
 		var nextDueDate time.Time
-		if err := rows.Scan(&item.ProductID, &item.Name, &imageURL, &nextDueDate); err != nil {
+		if err := rows.Scan(&item.ProductID, &item.Name, &genre, &imageURL, &nextDueDate); err != nil {
 			return nil, err
+		}
+		if genre.Valid {
+			item.Genre = &genre.String
 		}
 		if imageURL.Valid {
 			item.ImageURL = &imageURL.String
