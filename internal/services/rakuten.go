@@ -50,7 +50,7 @@ func (s *RakutenService) Search(keyword string, page, hits int) (*RakutenSearchR
 	params.Set("appid", s.appID)
 	params.Set("query", keyword)
 	params.Set("results", strconv.Itoa(hits))
-	params.Set("page", strconv.Itoa(page))
+	params.Set("start", strconv.Itoa((page-1)*hits+1))
 	params.Set("sort", "-score")
 
 	reqURL := yahooSearchURL + "?" + params.Encode()
