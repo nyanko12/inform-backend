@@ -2,7 +2,6 @@ package router
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
