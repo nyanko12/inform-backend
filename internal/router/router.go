@@ -85,6 +85,7 @@ func Setup(
 		protected.GET("/calendar", calendarHandler.GetMonth)
 
 		protected.PUT("/settings", settingsHandler.Update)
+		protected.PUT("/fcm-token", settingsHandler.UpdateFCMToken)
 		protected.DELETE("/settings/products/expired", settingsHandler.DeleteExpired)
 	}
 

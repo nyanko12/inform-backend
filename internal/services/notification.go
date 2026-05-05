@@ -26,7 +26,12 @@ func NewNotificationService(productRepo *repository.ProductRepository, serviceAc
 		return svc
 	}
 
-	opt := option.WithCredentialsFile(serviceAccountJSON)
+	var opt option.ClientOption
+	if len(serviceAccountJSON) > 0 && serviceAccountJSON[0] == '{' {
+		opt = option.WithCredentialsJSON([]byte(serviceAccountJSON))
+	} else {
+		opt = option.WithCredentialsFile(serviceAccountJSON)
+	}
 	app, err := firebase.NewApp(context.Background(), &firebase.Config{ProjectID: projectID}, opt)
 	if err != nil {
 		log.Printf("[notification] Firebase init error: %v", err)

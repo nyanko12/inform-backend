@@ -33,6 +33,22 @@ func (h *SettingsHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
+func (h *SettingsHandler) UpdateFCMToken(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	var req struct {
+		FCMToken string `json:"fcm_token" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := h.userRepo.UpdateFCMToken(userID, req.FCMToken); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 func (h *SettingsHandler) DeleteExpired(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	if err := h.productRepo.DeleteExpiredByUser(userID); err != nil {
