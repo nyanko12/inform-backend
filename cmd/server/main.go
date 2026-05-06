@@ -59,7 +59,7 @@ func main() {
 	c.Start()
 	defer c.Stop()
 
-	r := router.Setup(authH, itemsH, productsH, calendarH, settingsH, userRepo, cfg.FirebaseProjectID, cfg.FirebaseServiceAccountJSON)
+	r := router.Setup(authH, itemsH, productsH, calendarH, settingsH, userRepo, cfg.FirebaseProjectID, cfg.FirebaseServiceAccountJSON, notifSvc.SendDailyNotifications)
 
 	log.Printf("server listening on :%s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
