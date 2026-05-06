@@ -18,8 +18,6 @@ func Setup(
 	settingsHandler *handlers.SettingsHandler,
 	userRepo *repository.UserRepository,
 	firebaseProjectID, firebaseServiceAccountJSON string,
-	triggerNotification func(),
-	triggerTestNotification func(),
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -38,15 +36,6 @@ func Setup(
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	r.POST("/dev/trigger-notification", func(c *gin.Context) {
-		go triggerNotification()
-		c.JSON(200, gin.H{"message": "notification triggered"})
-	})
-
-	r.POST("/dev/test-notification", func(c *gin.Context) {
-		go triggerTestNotification()
-		c.JSON(200, gin.H{"message": "test notification triggered"})
-	})
 
 	r.GET("/myip", func(c *gin.Context) {
 		resp, err := http.Get("https://api.ipify.org?format=json")
