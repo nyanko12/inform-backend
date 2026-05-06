@@ -30,7 +30,7 @@ func computeStatus(daysRemaining, notificationDaysBefore int) string {
 }
 
 func (r *ProductRepository) ListByUser(userID, keyword string, notificationDaysBefore int) ([]*models.ProductWithStatus, error) {
-	query := `SELECT id, name, genre, image_url, days_to_consume, next_due_date
+	query := `SELECT id, name, genre, image_url, content_volume, content_unit, days_to_consume, next_due_date
 	          FROM products
 	          WHERE user_id = $1 AND is_deleted = FALSE`
 	args := []any{userID}
@@ -51,9 +51,10 @@ func (r *ProductRepository) ListByUser(userID, keyword string, notificationDaysB
 	var products []*models.ProductWithStatus
 	for rows.Next() {
 		var p models.ProductWithStatus
-		var genre, imageURL sql.NullString
+		var genre, imageURL, contentUnit sql.NullString
+		var contentVolume sql.NullFloat64
 		var nextDueDate time.Time
-		if err := rows.Scan(&p.ID, &p.Name, &genre, &imageURL, &p.DaysToConsume, &nextDueDate); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &genre, &imageURL, &contentVolume, &contentUnit, &p.DaysToConsume, &nextDueDate); err != nil {
 			return nil, err
 		}
 		if genre.Valid {
@@ -61,6 +62,12 @@ func (r *ProductRepository) ListByUser(userID, keyword string, notificationDaysB
 		}
 		if imageURL.Valid {
 			p.ImageURL = &imageURL.String
+		}
+		if contentVolume.Valid {
+			p.ContentVolume = &contentVolume.Float64
+		}
+		if contentUnit.Valid {
+			p.ContentUnit = &contentUnit.String
 		}
 		p.NextDueDate = nextDueDate.Format("2006-01-02")
 		p.DaysRemaining = int(nextDueDate.Truncate(24 * time.Hour).Sub(today).Hours() / 24)

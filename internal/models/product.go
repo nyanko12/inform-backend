@@ -20,14 +20,16 @@ type Product struct {
 }
 
 type ProductWithStatus struct {
-	ID            string  `json:"id"`
-	Name          string  `json:"name"`
-	Genre         *string `json:"genre,omitempty"`
-	ImageURL      *string `json:"image_url,omitempty"`
-	DaysToConsume int     `json:"days_to_consume"`
-	NextDueDate   string  `json:"next_due_date"`
-	DaysRemaining int     `json:"days_remaining"`
-	Status        string  `json:"status"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	Genre         *string  `json:"genre,omitempty"`
+	ImageURL      *string  `json:"image_url,omitempty"`
+	ContentVolume *float64 `json:"content_volume,omitempty"`
+	ContentUnit   *string  `json:"content_unit,omitempty"`
+	DaysToConsume int      `json:"days_to_consume"`
+	NextDueDate   string   `json:"next_due_date"`
+	DaysRemaining int      `json:"days_remaining"`
+	Status        string   `json:"status"`
 }
 
 type CalendarItem struct {
