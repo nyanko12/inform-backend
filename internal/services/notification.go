@@ -83,10 +83,8 @@ func (s *NotificationService) SendDailyNotifications() {
 
 func buildNotificationBody(label string, daysRemaining, notificationDaysBefore int) string {
 	switch {
-	case daysRemaining == notificationDaysBefore:
-		return fmt.Sprintf("%s が残り%d日で無くなります", label, notificationDaysBefore)
-	case daysRemaining == 3:
-		return fmt.Sprintf("%s が残り3日で無くなります", label)
+	case daysRemaining > 0 && daysRemaining <= notificationDaysBefore:
+		return fmt.Sprintf("%s が残り%d日で無くなります", label, daysRemaining)
 	case daysRemaining == 0:
 		return fmt.Sprintf("%s が今日なくなります。購入をお忘れなく！", label)
 	case daysRemaining == -1:
