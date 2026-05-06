@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/nyanko/inform-backend/internal/config"
 	"github.com/nyanko/inform-backend/internal/db"
@@ -52,11 +53,15 @@ func main() {
 
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
+		log.Printf("[cron] Asia/Tokyo not found, falling back to UTC: %v", err)
 		jst = time.UTC
+	} else {
+		log.Println("[cron] timezone: Asia/Tokyo")
 	}
 	c := cron.New(cron.WithLocation(jst))
 	c.AddFunc("0 8 * * *", notifSvc.SendDailyNotifications)
 	c.Start()
+	log.Printf("[cron] daily notification scheduled at 08:00 %s", jst)
 	defer c.Stop()
 
 	r := router.Setup(authH, itemsH, productsH, calendarH, settingsH, userRepo, cfg.FirebaseProjectID, cfg.FirebaseServiceAccountJSON)
