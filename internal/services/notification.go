@@ -68,8 +68,12 @@ func (s *NotificationService) SendDailyNotifications() {
 		if u.FCMToken == nil {
 			continue
 		}
+		label := p.Name
+		if p.Genre != nil && *p.Genre != "" {
+			label = *p.Genre
+		}
 		daysRemaining := int(p.NextDueDate.Truncate(24 * time.Hour).Sub(today).Hours() / 24)
-		body := buildNotificationBody(p.Name, daysRemaining, u.NotificationDaysBefore)
+		body := buildNotificationBody(label, daysRemaining, u.NotificationDaysBefore)
 		if body == "" {
 			continue
 		}
@@ -77,16 +81,16 @@ func (s *NotificationService) SendDailyNotifications() {
 	}
 }
 
-func buildNotificationBody(name string, daysRemaining, notificationDaysBefore int) string {
+func buildNotificationBody(label string, daysRemaining, notificationDaysBefore int) string {
 	switch {
 	case daysRemaining == notificationDaysBefore:
-		return fmt.Sprintf("%s が残り%d日で無くなります", name, notificationDaysBefore)
+		return fmt.Sprintf("%s が残り%d日で無くなります", label, notificationDaysBefore)
 	case daysRemaining == 3:
-		return fmt.Sprintf("%s が残り3日で無くなります", name)
+		return fmt.Sprintf("%s が残り3日で無くなります", label)
 	case daysRemaining == 0:
-		return fmt.Sprintf("%s が今日なくなります。購入をお忘れなく！", name)
+		return fmt.Sprintf("%s が今日なくなります。購入をお忘れなく！", label)
 	case daysRemaining == -1:
-		return fmt.Sprintf("%s の期日が過ぎています", name)
+		return fmt.Sprintf("%s の期日が過ぎています", label)
 	}
 	return ""
 }

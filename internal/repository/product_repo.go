@@ -185,7 +185,7 @@ func (r *ProductRepository) DeleteExpiredByUser(userID string) error {
 
 func (r *ProductRepository) FindAllActiveForNotification() ([]models.ProductNotificationRow, error) {
 	rows, err := r.db.Query(
-		`SELECT p.id, p.user_id, p.name, p.next_due_date, u.id, u.fcm_token, u.notification_days_before
+		`SELECT p.id, p.user_id, p.name, p.genre, p.next_due_date, u.id, u.fcm_token, u.notification_days_before
 		 FROM products p
 		 JOIN users u ON p.user_id = u.id
 		 WHERE p.is_deleted = FALSE AND u.fcm_token IS NOT NULL`,
@@ -198,15 +198,18 @@ func (r *ProductRepository) FindAllActiveForNotification() ([]models.ProductNoti
 	var results []models.ProductNotificationRow
 	for rows.Next() {
 		var row models.ProductNotificationRow
-		var fcmToken sql.NullString
+		var fcmToken, genre sql.NullString
 		if err := rows.Scan(
-			&row.Product.ID, &row.Product.UserID, &row.Product.Name, &row.Product.NextDueDate,
+			&row.Product.ID, &row.Product.UserID, &row.Product.Name, &genre, &row.Product.NextDueDate,
 			&row.User.ID, &fcmToken, &row.User.NotificationDaysBefore,
 		); err != nil {
 			return nil, err
 		}
 		if fcmToken.Valid {
 			row.User.FCMToken = &fcmToken.String
+		}
+		if genre.Valid {
+			row.Product.Genre = &genre.String
 		}
 		results = append(results, row)
 	}
