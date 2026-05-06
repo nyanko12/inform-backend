@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nyanko/inform-backend/internal/middleware"
@@ -129,18 +130,23 @@ func (h *ProductsHandler) UpdateDays(c *gin.Context) {
 
 func (h *ProductsHandler) CalculateDays(c *gin.Context) {
 	var req struct {
-		Genre         string  `json:"genre" binding:"required"`
-		ContentVolume float64 `json:"content_volume" binding:"required"`
-		ContentUnit   string  `json:"content_unit"`
-		NumPeople     int     `json:"num_people" binding:"required,min=1"`
+		Genre               string   `json:"genre" binding:"required"`
+		ContentVolume       float64  `json:"content_volume" binding:"required"`
+		ContentUnit         string   `json:"content_unit"`
+		NumPeople           int      `json:"num_people" binding:"required,min=1"`
+		DailyUsagePerPerson *float64 `json:"daily_usage_per_person"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	usage, days, err := h.calculator.Calculate(req.Genre, req.ContentVolume, req.NumPeople)
+	usage, days, err := h.calculator.Calculate(req.Genre, req.ContentVolume, req.NumPeople, req.DailyUsagePerPerson, req.ContentUnit)
 	if err != nil {
+		if strings.HasPrefix(err.Error(), "genre not found") {
+			c.JSON(http.StatusOK, gin.H{"genre_not_found": true})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

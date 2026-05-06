@@ -16,16 +16,33 @@ func NewCalculatorService(db *sql.DB) *CalculatorService {
 	return &CalculatorService{db: db}
 }
 
-func (s *CalculatorService) Calculate(genre string, contentVolume float64, numPeople int) (*models.GenreDailyUsage, int, error) {
+func (s *CalculatorService) Calculate(genre string, contentVolume float64, numPeople int, dailyUsagePerPerson *float64, unit string) (*models.GenreDailyUsage, int, error) {
 	var usage models.GenreDailyUsage
 	err := s.db.QueryRow(
 		`SELECT id, genre, unit, daily_usage_per_person FROM genre_daily_usage WHERE genre = $1`,
 		genre,
 	).Scan(&usage.ID, &usage.Genre, &usage.Unit, &usage.DailyUsagePerPerson)
+
 	if err == sql.ErrNoRows {
-		return nil, 0, fmt.Errorf("genre not found: %s", genre)
-	}
-	if err != nil {
+		if dailyUsagePerPerson == nil {
+			return nil, 0, fmt.Errorf("genre not found: %s", genre)
+		}
+		if unit == "" {
+			unit = "ml"
+		}
+		_, insertErr := s.db.Exec(
+			`INSERT INTO genre_daily_usage (genre, unit, daily_usage_per_person) VALUES ($1, $2, $3)`,
+			genre, unit, *dailyUsagePerPerson,
+		)
+		if insertErr != nil {
+			return nil, 0, insertErr
+		}
+		usage = models.GenreDailyUsage{
+			Genre:               genre,
+			Unit:                unit,
+			DailyUsagePerPerson: *dailyUsagePerPerson,
+		}
+	} else if err != nil {
 		return nil, 0, err
 	}
 
