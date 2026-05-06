@@ -95,6 +95,37 @@ func buildNotificationBody(label string, daysRemaining, notificationDaysBefore i
 	return ""
 }
 
+func (s *NotificationService) SendTestNotification() {
+	if !s.enabled {
+		log.Println("[notification] skipped (Firebase not configured)")
+		return
+	}
+	rows, err := s.productRepo.FindAllActiveForNotification()
+	if err != nil {
+		log.Printf("[notification] fetch error: %v", err)
+		return
+	}
+	ctx := context.Background()
+	client, err := s.app.Messaging(ctx)
+	if err != nil {
+		log.Printf("[notification] messaging client error: %v", err)
+		return
+	}
+	sent := map[string]bool{}
+	for _, row := range rows {
+		u := row.User
+		if u.FCMToken == nil || sent[*u.FCMToken] {
+			continue
+		}
+		sent[*u.FCMToken] = true
+		s.send(ctx, client, *u.FCMToken, "お知らせくん", "通知テスト：正常に届いています")
+		log.Printf("[notification] test sent to user %s", u.ID)
+	}
+	if len(sent) == 0 {
+		log.Println("[notification] test: no FCM tokens found in DB")
+	}
+}
+
 func (s *NotificationService) send(ctx context.Context, client *messaging.Client, token, title, body string) {
 	_, err := client.Send(ctx, &messaging.Message{
 		Token: token,
