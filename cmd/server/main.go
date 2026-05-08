@@ -22,6 +22,8 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
+	log.Printf("[config] RakutenApplicationID=%q", cfg.RakutenApplicationID)
+
 	database, err := db.Connect(cfg.DBDSN)
 	if err != nil {
 		log.Fatalf("db connect: %v", err)
