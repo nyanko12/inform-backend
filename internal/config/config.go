@@ -33,7 +33,7 @@ func Load() (*Config, error) {
 		DBPassword: getEnv("DB_PASSWORD", "inform_pass"),
 		DBName:     getEnv("DB_NAME", "inform_db"),
 
-		RakutenApplicationID: getEnv("YAHOO_APP_ID", getEnv("RAKUTEN_APPLICATION_ID", "")),
+		RakutenApplicationID: getEnv("YAHOO_APPLICATION_ID", getEnv("YAHOO_APP_ID", getEnv("RAKUTEN_APPLICATION_ID", ""))),
 
 		FirebaseProjectID:          getEnv("FIREBASE_PROJECT_ID", ""),
 		FirebaseServiceAccountJSON: getEnv("FIREBASE_SERVICE_ACCOUNT_JSON", ""),

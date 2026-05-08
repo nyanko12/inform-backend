@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -23,16 +22,7 @@ func main() {
 		log.Fatalf("config: %v", err)
 	}
 
-	log.Printf("[config] RakutenApplicationID=%q", cfg.RakutenApplicationID)
-	log.Printf("[config] YAHOO_APP_ID env=%q len=%d", os.Getenv("YAHOO_APP_ID"), len(os.Getenv("YAHOO_APP_ID")))
-	log.Printf("[config] RAKUTEN_APPLICATION_ID env=%q", os.Getenv("RAKUTEN_APPLICATION_ID"))
-	for _, e := range os.Environ() {
-		if len(e) >= 5 && (e[:5] == "YAHOO" || e[:6] == "RAKUTE") {
-			log.Printf("[config] env: %s", e)
-		}
-	}
-
-	database, err := db.Connect(cfg.DBDSN)
+database, err := db.Connect(cfg.DBDSN)
 	if err != nil {
 		log.Fatalf("db connect: %v", err)
 	}
