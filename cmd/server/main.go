@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -23,6 +24,8 @@ func main() {
 	}
 
 	log.Printf("[config] RakutenApplicationID=%q", cfg.RakutenApplicationID)
+	log.Printf("[config] YAHOO_APP_ID env=%q", os.Getenv("YAHOO_APP_ID"))
+	log.Printf("[config] RAKUTEN_APPLICATION_ID env=%q", os.Getenv("RAKUTEN_APPLICATION_ID"))
 
 	database, err := db.Connect(cfg.DBDSN)
 	if err != nil {
