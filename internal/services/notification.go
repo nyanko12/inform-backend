@@ -47,12 +47,14 @@ func (s *NotificationService) SendDailyNotifications() {
 		log.Println("[notification] skipped (Firebase not configured)")
 		return
 	}
+	log.Println("[notification] starting daily notifications")
 
 	rows, err := s.productRepo.FindAllActiveForNotification()
 	if err != nil {
 		log.Printf("[notification] fetch error: %v", err)
 		return
 	}
+	log.Printf("[notification] found %d active products", len(rows))
 
 	ctx := context.Background()
 	client, err := s.app.Messaging(ctx)
@@ -62,10 +64,12 @@ func (s *NotificationService) SendDailyNotifications() {
 	}
 
 	today := time.Now().Truncate(24 * time.Hour)
+	sent, skipped := 0, 0
 	for _, row := range rows {
 		p := row.Product
 		u := row.User
 		if u.FCMToken == nil {
+			skipped++
 			continue
 		}
 		label := p.Name
@@ -75,10 +79,13 @@ func (s *NotificationService) SendDailyNotifications() {
 		daysRemaining := int(p.NextDueDate.Truncate(24 * time.Hour).Sub(today).Hours() / 24)
 		body := buildNotificationBody(label, daysRemaining, u.NotificationDaysBefore)
 		if body == "" {
+			skipped++
 			continue
 		}
 		s.send(ctx, client, *u.FCMToken, "お知らせくん", body)
+		sent++
 	}
+	log.Printf("[notification] done: sent=%d skipped=%d", sent, skipped)
 }
 
 func buildNotificationBody(label string, daysRemaining, notificationDaysBefore int) string {

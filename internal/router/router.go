@@ -18,6 +18,7 @@ func Setup(
 	settingsHandler *handlers.SettingsHandler,
 	userRepo *repository.UserRepository,
 	firebaseProjectID, firebaseServiceAccountJSON string,
+	notifTrigger func(),
 ) *gin.Engine {
 	r := gin.Default()
 
@@ -34,6 +35,11 @@ func Setup(
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
+	})
+
+	r.POST("/debug/notify", func(c *gin.Context) {
+		go notifTrigger()
+		c.JSON(200, gin.H{"message": "notification triggered"})
 	})
 
 
